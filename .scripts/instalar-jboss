@@ -1,0 +1,104 @@
+#!/bin/bash
+set +x
+set -e
+
+BASE_DIR=${BASE_DIR:-/vagrant}
+SCRIPTS_DIR=${SCRIPTS_DIR:-$BASE_DIR/.scripts}
+HOST=`hostname -s`
+BACKUP_DIR=${BACKUP_DIR:-$BASE_DIR/.backup}; mkdir -p $BACKUP_DIR
+
+source "$BASE_DIR"/$HOST/jboss.conf
+source "$SCRIPTS_DIR"/jboss.conf
+
+if [ -f $JBOSS_PATCHED_INSTALLER ]
+then
+  JBOSS_INSTALLER=$JBOSS_PATCHED_INSTALLER
+  JBOSS_PATCHED=true
+fi
+
+[ $JBOSS_TYPE = master ] &&
+  echo "Instalando o `basename $JBOSS_INSTALLER` como $JBOSS_TYPE ($JBOSS_MASTER_TYPE) em $HOST ..." ||
+  echo "Instalando o `basename $JBOSS_INSTALLER` como $JBOSS_TYPE em $HOST ..."
+
+cd $JBOSS_PARENT_HOME
+
+if ! grep -q $JBOSS_USER /etc/passwd
+then
+   echo "Criando o usuário $JBOSS_USER ..."
+   sudo useradd $JBOSS_USER
+fi
+
+echo "Extraindo $JBOSS_INSTALLER ..."
+sudo unzip -q $JBOSS_INSTALLER
+
+echo "Ajustando owner p/ $JBOSS_DIR ..."
+sudo chown -R $JBOSS_USER: $JBOSS_DIR
+
+if ! $JBOSS_PATCHED
+then
+  for patch in $JBOSS_PATCH1 $JBOSS_PATCH2
+  do
+    echo "Aplicando o patch $patch ..."
+    sudo -u $JBOSS_USER $JBOSS_DIR/bin/jboss-cli.sh --command="patch apply --override-all $patch" > /dev/null
+  done
+
+  echo "Instalando os componentes nativos ..."
+  sudo unzip -q $JBOSS_NATIVE_INSTALLER
+
+  echo "Gerando o $JBOSS_PATCHED_INSTALLER ..."
+  sudo zip -qr $JBOSS_PATCHED_INSTALLER $JBOSS_DIR
+fi
+
+if [ $JBOSS_TYPE = master ]
+then
+  echo "Adicionando o usuário de administração do JBoss ..."
+  sudo -u $JBOSS_USER $JBOSS_DIR/bin/add-user.sh -s -u $JBOSS_USER -p $JBOSS_PASSWORD
+fi
+
+echo "Criando o script $JBOSS_INIT ..."
+sudo cp $JBOSS_DIR/bin/init.d/jboss-as-domain.sh $JBOSS_INIT
+
+echo "Ajustando os parâmetros de inicialização em $JBOSS_CONF ..."
+sudo install -d `dirname $JBOSS_CONF`
+cat <<EOF | sudo tee $JBOSS_CONF > /dev/null
+JBOSS_HOME=$JBOSS_HOME
+JBOSS_USER=$JBOSS_USER
+EOF
+echo "JBOSS_HOST_CONFIG=host-$JBOSS_TYPE.xml" | sudo tee -a $JBOSS_CONF > /dev/null
+sudo chown 644 $JBOSS_CONF
+
+echo "Ajustando configurações para um JBoss $JBOSS_TYPE ..."
+PATCH_SUFIX=".$JBOSS_TYPE.patch"
+for f in $(cd $SCRIPTS_DIR && find $JBOSS_DIR -name \*$PATCH_SUFIX)
+do
+  echo "Aplicando $f ..."
+  sudo -u $JBOSS_USER cp ${f%$PATCH_SUFIX} ${f%$PATCH_SUFIX}.original
+  sudo -u $JBOSS_USER patch ${f%$PATCH_SUFIX} < $SCRIPTS_DIR/$f > /dev/null
+done
+
+f=$JBOSS_DIR/bin/domain.conf
+echo "Configurando $f ..."
+if [ $JBOSS_TYPE = master ]
+then
+  sudo -u $JBOSS_USER sed -i "s/JBOSS_BIND_ADDRESS_MANAGEMENT/$JBOSS_BIND_ADDRESS_MANAGEMENT/g" $f
+fi
+sudo -u $JBOSS_USER sed -i "s/JBOSS_BIND_ADDRESS/$JBOSS_BIND_ADDRESS/g" $f
+
+if [ $JBOSS_TYPE = slave ]
+then
+  f=$JBOSS_DIR/domain/configuration/host-slave.xml
+  echo "Configurando $f ..."
+  sudo -u $JBOSS_USER \
+  sed -i "
+    s/JBOSS_PASSWORD_BASE64/$JBOSS_PASSWORD_BASE64/g
+    s/JBOSS_USER/$JBOSS_USER/g
+    s/JBOSS_MASTER_PRIMARY_IP/$JBOSS_MASTER_PRIMARY_IP/g
+    s/JBOSS_MASTER_BACKUP_IP/$JBOSS_MASTER_BACKUP_IP/g
+  " $f
+fi
+
+echo "Ajustando a inicialização automática do JBoss ..."
+sudo chkconfig jboss-as on
+
+echo "Iniciando o JBoss ..."
+sudo service jboss-as start

@@ -1,0 +1,32 @@
+#!/bin/bash
+set +x
+
+BASE_DIR=${BASE_DIR:-/vagrant}
+BACKUP_DIR=${BACKUP_DIR:-$BASE_DIR/.backup}; mkdir -p $BACKUP_DIR
+
+MAVEN_URL=http://ftp.unicamp.br/pub/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz
+MAVEN=$BACKUP_DIR/${MAVEN_URL##*/}
+
+echo "Instalando o Maven em `hostname -s` ..."
+
+echo "Removendo instalações anteriores ..."
+sudo rm -rf /opt/maven /opt/apache-maven-3.3.9 /etc/profile.d/maven.sh
+
+echo "Baixando $MAVEN_URL ..."
+wget -c -O $MAVEN $MAVEN_URL 2> /dev/null
+
+maven_profile=/etc/profile.d/maven.sh
+echo "Configurando o PATH pelo arquivo $maven_profile ..."
+cat <<'EOF' | sudo tee $maven_profile > /dev/null
+export M2_HOME=/opt/maven
+export PATH=$M2_HOME/bin:$PATH
+EOF
+
+echo "Descompactando o $MAVEN ..."
+cd /opt
+sudo tar xvfz $MAVEN > /dev/null
+sudo ln -s apache-maven-3.3.9 maven
+
+echo "Criando o link ~/.m2 para $BACKUP_DIR/.m2 ..."
+mkdir -p $BACKUP_DIR/.m2
+cd && rm -rf .m2 && ln -sf $BACKUP_DIR/.m2

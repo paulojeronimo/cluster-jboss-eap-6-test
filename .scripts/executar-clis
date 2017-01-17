@@ -1,0 +1,22 @@
+#!/bin/bash
+set +x
+set -e
+
+BASE_DIR=${BASE_DIR:-/vagrant}
+SCRIPTS_DIR=${SCRIPTS_DIR:-$BASE_DIR/.scripts}
+HOST=`hostname -s`
+BACKUP_DIR=${BACKUP_DIR:-$BASE_DIR/.backup}; mkdir -p $BACKUP_DIR
+
+source "$BASE_DIR"/$HOST/jboss.conf
+source "$SCRIPTS_DIR"/jboss.conf
+
+echo "Executando clis ..."
+
+if [ $JBOSS_TYPE = master ]
+then
+  for cli in $SCRIPTS_DIR/clis/*
+  do
+    echo "Executando $cli ..."
+    sudo -u $JBOSS_USER $JBOSS_DIR/bin/jboss-cli.sh -c --file=$cli
+  done
+fi

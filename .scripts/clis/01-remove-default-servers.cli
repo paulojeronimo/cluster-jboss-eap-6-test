@@ -1,0 +1,18 @@
+# stop the preconfigured server for the domain
+batch
+
+# first stop the default servers, block until the server is down
+/host=master/server-config=server-one:stop(blocking=true)
+/host=master/server-config=server-two:stop(blocking=true)
+
+# remove the default server configuration and server-groups
+/host=master/server-config=server-one:remove
+/host=master/server-config=server-two:remove
+/host=master/server-config=server-three:remove
+/server-group=main-server-group:remove
+/server-group=other-server-group:remove
+
+run-batch
+
+# without restart, outside the batch, there are different problems
+:restart-servers

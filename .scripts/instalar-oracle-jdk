@@ -1,0 +1,26 @@
+#!/bin/bash
+set +x
+
+BASE_DIR=${BASE_DIR:-/vagrant}
+BACKUP_DIR=${BACKUP_DIR:-$BASE_DIR/.backup}; mkdir -p $BACKUP_DIR
+
+JDK_URL=http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.rpm
+JDK=$BACKUP_DIR/${JDK_URL##*/}
+
+echo "Instalando o Oracle JDK em `hostname -s` ..."
+
+echo "Baixando $JDK_URL ..."
+wget -c \
+-O "$BACKUP_DIR/${JDK_URL##*/}" \
+--no-check-certificate --no-cookies \
+--header "Cookie: oraclelicense=accept-securebackup-cookie" "$JDK_URL" 2> /dev/null
+
+echo "Instalando o $JDK ..."
+sudo yum -y install $JDK
+
+java_profile=/etc/profile.d/java.sh
+echo "Configurando o PATH pelo arquivo $java_profile ..."
+cat << 'EOF' | sudo tee $java_profile > /dev/null
+export JAVA_HOME=/usr/java/latest
+export PATH=$JAVA_HOME/bin:$PATH
+EOF

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo "Atualizando os pacotes instalados ..."
+sudo yum -y --exclude='kernel*' update
+
+echo "Instalando pacotes de utilitários ..."
+sudo yum -y install \
+vim \
+tree \
+patch \
+lsof \
+lynx \
+zip \
+unzip

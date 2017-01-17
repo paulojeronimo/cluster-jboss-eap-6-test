@@ -1,0 +1,11 @@
+#!/bin/bash
+set +x
+
+BASE_DIR=${BASE_DIR:-/vagrant}
+BACKUP_DIR=${BACKUP_DIR:-$BASE_DIR/.backup}
+VAR_CACHE=$BACKUP_DIR/var_cache.tar
+
+dir=/var/cache/yum
+
+echo "Salvando o cache de pacotes ($dir) ..."
+sudo tar cvfP $VAR_CACHE $dir > /dev/null

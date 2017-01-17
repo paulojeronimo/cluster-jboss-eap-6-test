@@ -1,0 +1,25 @@
+--- host-slave.xml.original	2017-01-16 05:06:22.841800871 +0000
++++ host-slave.xml	2017-01-16 05:22:14.766776751 +0000
+@@ -7,7 +7,7 @@
+             <security-realm name="ManagementRealm">
+                 <server-identities>
+                      <!-- Replace this with either a base64 password of your own, or use a vault with a vault expression -->
+-                     <secret value="c2xhdmVfdXNlcl9wYXNzd29yZA=="/>
++                     <secret value="JBOSS_PASSWORD_BASE64"/>
+                 </server-identities>
+ 
+                 <authentication>
+@@ -55,7 +55,12 @@
+     </management>
+ 
+     <domain-controller>
+-       <remote host="${jboss.domain.master.address}" port="${jboss.domain.master.port:9999}" security-realm="ManagementRealm"/>
++        <remote security-realm="ManagementRealm" username="JBOSS_USER">
++            <discovery-options>  
++               <static-discovery name="primary" host="JBOSS_MASTER_PRIMARY_IP" port="9999"/>  
++               <static-discovery name="backup" host="JBOSS_MASTER_BACKUP_IP" port="9999"/>  
++            </discovery-options> 
++        </remote>
+     </domain-controller>
+ 
+     <interfaces>

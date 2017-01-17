@@ -1,0 +1,15 @@
+--- domain.conf.original	2017-01-16 06:01:50.288929397 +0000
++++ domain.conf	2017-01-16 06:24:13.098928076 +0000
+@@ -42,9 +42,11 @@
+ # Specify options to pass to the Java VM.
+ #
+ if [ "x$JAVA_OPTS" = "x" ]; then
+-   JAVA_OPTS="-Xms64m -Xmx512m -XX:MaxPermSize=256m -Djava.net.preferIPv4Stack=true"
++   JAVA_OPTS="-Xms64m -Xmx512m -Djava.net.preferIPv4Stack=true"
+    JAVA_OPTS="$JAVA_OPTS -Djboss.modules.system.pkgs=$JBOSS_MODULES_SYSTEM_PKGS -Djava.awt.headless=true"
+    JAVA_OPTS="$JAVA_OPTS -Djboss.modules.policy-permissions=true"
++   JAVA_OPTS="$JAVA_OPTS -Djboss.bind.address=JBOSS_BIND_ADDRESS"
++   JAVA_OPTS="$JAVA_OPTS -Djboss.bind.address.management=JBOSS_BIND_ADDRESS_MANAGEMENT"
+ else
+    echo "JAVA_OPTS already set in environment; overriding default settings with values: $JAVA_OPTS"
+ fi

@@ -1,0 +1,53 @@
+#!/bin/bash
+set +x
+set -e
+
+BASE_DIR=${BASE_DIR-/vagrant}
+SCRIPTS_DIR=${SCRIPTS_DIR:-$BASE_DIR/.scripts}
+
+FORK=${FORK-https://github.com/paulojeronimo/jbosscc-as7-examples}
+FORK_DIR=${FORK##*/}
+PROJ=${FORK_DIR}/cluster-example
+
+if ! which mvn &> /dev/null
+then
+   f=/etc/profile.d/maven.sh; [ -f $f ] && source $f || { echo "Maven não instalado!"; exit 1; }
+fi
+
+_get() {
+  [ -d ${FORK_DIR} ] && return
+
+  echo "Baixando $FORK ..."
+  git clone $FORK
+}
+
+_mvn() {
+  local op=${@:-clean package}
+  _get
+
+  echo "Construindo $PROJ ..."
+  pushd $PROJ &> /dev/null
+  mvn $op
+  popd &> /dev/null
+}
+
+_deploy() {
+  # TODO
+  :
+}
+
+_rm() {
+  rm -rf $FORK_DIR
+}
+
+cd $SCRIPTS_DIR
+
+op=${@:-mvn}
+if type _$op &> /dev/null
+then
+  shift || true
+  _$op "$@"
+else
+  echo "\"$op\" não é uma operação conhecida!"
+  exit 1
+fi

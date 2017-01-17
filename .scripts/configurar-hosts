@@ -1,0 +1,18 @@
+#!/bin/bash
+set +x
+
+configurar() {
+    local f=/etc/hosts
+
+    grep -q "^$1.*$2" $f || { echo -e "$1\t$2" | sudo tee -a $f > /dev/null; }
+}
+
+if [ "$1" -a "$2" ]
+then
+  configurar $1 $2
+else
+  configurar 172.17.6.81 master1
+  configurar 172.17.6.82 master2
+  configurar 172.17.6.83 slave1
+  configurar 172.17.6.84 slave2
+fi

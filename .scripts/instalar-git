@@ -1,0 +1,64 @@
+#!/bin/bash
+set +x
+
+BASE_DIR=${BASE_DIR:-/vagrant}
+BACKUP_DIR=${BACKUP_DIR:-$BASE_DIR/.backup}; mkdir -p $BACKUP_DIR
+
+if which git &> /dev/null
+then
+  echo "Removendo o git já instalado ..."
+  sudo yum -y remove git
+fi
+
+echo "Instalando o git em `hostname -s` ..."
+
+forma1() {
+  local GIT_VERSION=2.11.0
+  local GIT_URL=https://github.com/git/git/archive/v$GIT_VERSION.tar.gz
+  local GIT=$BACKUP_DIR/git-${GIT_URL##*/}
+
+  echo "Instalando o git a partir de seus fontes em $GIT_URL ..."
+
+  echo "Baixando os pacotes requeridos para a compilação do git ..."
+  sudo yum -y groupinstall "Development Tools"
+  sudo yum -y install \
+  gettext-devel \
+  openssl \
+  openssl-devel \
+  perl-CPAN \
+  perl-devel \
+  zlib-devel \
+  expat \
+  expat-devel \
+  libcurl-devel
+
+  rm -rf git-$GIT_VERSION
+
+  echo "Baixando $GIT_URL ..."
+  wget -c $GIT_URL -O $GIT 2> /dev/null
+
+  echo "Extraindo o $GIT ..."
+  cd && tar xvfz $GIT > /dev/null
+
+  echo "Compilando e instalando o $GIT ..."
+  cd git-$GIT_VERSION
+  make configure
+  ./configure --prefix=/usr/local --with-expat --with-openssl
+  make
+  sudo make install
+
+  echo "Removendo qualquer git instalado via pacote ..."
+  sudo yum -y remove git
+}
+
+forma2() {
+  local REPO=http://opensource.wandisco.com/centos/6/git/x86_64/wandisco-git-release-6-1.noarch.rpm
+
+  echo "Instalando o git a partir do repositório $REPO ..."
+  sudo yum -y install $REPO
+
+  echo "Instalando o git ..."
+  sudo yum -y install git
+}
+
+forma2
