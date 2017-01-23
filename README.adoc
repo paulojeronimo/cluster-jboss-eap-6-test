@@ -22,12 +22,11 @@ Além de apresentar o funcionamento de clusters, este projeto também demonstra:
 == Pré-requisitos
 
 . Instale o {uri-virtualbox}[VirtualBox] e o {uri-vagrant}[Vagrant].
-** Se estiver utilizando o Mac OS X:
-*** A página https://github.com/paulojeronimo/dicas-osx/blob/master/homebrew.md apresenta comandos para a instalação através do {uri-homebrew}[Homebrew]. Porém, os pacotes Homebrew para o virtualbox e vagrant, na data em que este projeto foi criado, estavam muito desatualizados (5.1.2 e 1.8.5) em relação aos atuais (5.1.12 e 1.9.1). Dessa forma, neste S.O. a melhor opção é fazer a instalação baixando os instaladores correspondentes de seus sites.
-*** Opcionalmente, instale o http://vagrantmanager.com/[vagrant-manager] com o comando a seguir (pacote no Homebrew: vagrant-manager):
+** Se estiver utilizando o Mac OS X, a página https://github.com/paulojeronimo/dicas-osx/blob/master/homebrew.md apresenta comandos para a instalação através do {uri-homebrew}[Homebrew].
+** Opcionalmente, instale o http://vagrantmanager.com/[vagrant-manager] (pacote Homebrew: vagrant-manager)
 . Crie um diretório link:.backup[].
 . Logue-se em https://access.redhat.com e faça o download, para o diretório link:.backup[], dos seguintes instaladores:
-** https://access.redhat.com/jbossnetwork/restricted/softwareDownload.html?softwareId=37383[Red Hat JBoss Enterprise Application Platform 6.4.0 Installer]
+** https://access.redhat.com/jbossnetwork/restricted/softwareDownload.html?softwareId=37393[Red Hat JBoss Enterprise Application Platform 6.4.0]
 ** https://access.redhat.com/jbossnetwork/restricted/softwareDownload.html?softwareId=37063[Red Hat JBoss Enterprise Application Platform 6.4.0 Native Components for RHEL 6 x86_64]
 ** https://access.redhat.com/jbossnetwork/restricted/softwareDownload.html?softwareId=45371[Red Hat JBoss Enterprise Application Platform 6.4 Update 09]
 ** https://access.redhat.com/jbossnetwork/restricted/softwareDownload.html?softwareId=45681[Issues with Some Missing Dependencies Post 6.4 Update 09]
@@ -52,7 +51,7 @@ vagrant up
 
 == Testes
 
-=== Acesso a Console de Administração dos Domain Controllers
+=== Acesso à Console de Administração dos Domain Controllers
 
 * Teste o acesso a console de administração do `master1` em http://master1:9990
 ** Usuário/senha: jbossusr/jb_xpt0123
