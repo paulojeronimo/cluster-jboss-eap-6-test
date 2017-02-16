@@ -64,4 +64,9 @@ https://access.redhat.com/solutions/218053
 https://access.redhat.com/solutions/736033
 https://access.redhat.com/documentation/en-US/JBoss_Enterprise_Application_Platform/6.4/html/Administration_and_Configuration_Guide/About_Domain_Controller_Failover.html
 https://access.redhat.com/solutions/1247783
+https://access.redhat.com/solutions/183713
+* DC backup:
+** https://access.redhat.com/solutions/255963
+** https://github.com/tqvarnst/eap-dc-failover-demo
+** https://access.redhat.com/documentation/en-US/JBoss_Enterprise_Application_Platform/6.4/html/Administration_and_Configuration_Guide/About_Domain_Controller_Failover.html
 ////

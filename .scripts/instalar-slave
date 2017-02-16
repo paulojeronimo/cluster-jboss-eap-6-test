@@ -7,4 +7,6 @@ SCRIPTS=${SCRIPTS:-$BASE_DIR/.scripts}
 $SCRIPTS/restaurar-cache-de-pacotes
 $SCRIPTS/atualizar-e-instalar-pacotes
 $SCRIPTS/instalar-oracle-jdk
+$SCRIPTS/criar-usuario-jboss
 $SCRIPTS/instalar-jboss
+$SCRIPTS/iniciar-jboss
