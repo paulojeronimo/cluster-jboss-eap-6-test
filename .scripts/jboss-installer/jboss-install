@@ -1,0 +1,108 @@
+#!/bin/bash
+set +x
+set -e
+
+export BASE_DIR=`cd "$(dirname "$0")"; pwd`
+source "$BASE_DIR"/common
+
+JBOSS_PATCHED=false
+if [ -f $JBOSS_PATCHED_INSTALLER ]
+then
+  JBOSS_INSTALLER=$JBOSS_PATCHED_INSTALLER
+  JBOSS_PATCHED=true
+fi
+
+[ $JBOSS_TYPE = master ] &&
+  echo "Instalando o `basename $JBOSS_INSTALLER` como $JBOSS_TYPE ($JBOSS_MASTER_TYPE) em $HOST ..." ||
+  echo "Instalando o `basename $JBOSS_INSTALLER` como $JBOSS_TYPE em $HOST ..."
+
+echo "Criando e/ou mudando p/ o diretório $JBOSS_PARENT_HOME p/ iniciar a instalação do JBoss ..."
+mkdir -p "$JBOSS_PARENT_HOME" && cd $_
+
+echo "Extraindo $JBOSS_INSTALLER ..."
+sudo unzip -q $JBOSS_INSTALLER
+
+echo "Ajustando o dono ($JBOSS_USER) do diretório $JBOSS_DIR ..."
+sudo chown -R $JBOSS_USER: $JBOSS_DIR
+
+if ! $JBOSS_PATCHED
+then
+  echo "Gerando o $JBOSS_PATCHED_INSTALLER ..."
+
+  for n in `seq ${#JBOSS_PATCHES[*]}`
+  do
+    patch=${JBOSS_PATCHES[$n]}
+    echo "  Aplicando o patch $patch ..."
+    sudo -u $JBOSS_USER $JBOSS_DIR/bin/jboss-cli.sh --command="patch apply --override-all $patch" > /dev/null
+  done
+
+  echo "  Instalando os componentes nativos ..."
+  sudo unzip -q $JBOSS_NATIVE_INSTALLER
+
+  echo "  Gerando o zip ..."
+  sudo zip -qr $JBOSS_PATCHED_INSTALLER $JBOSS_DIR
+fi
+
+if [ $JBOSS_TYPE = master ]
+then
+  echo "Adicionando o usuário de administração do JBoss ..."
+  sudo -u $JBOSS_USER $JBOSS_DIR/bin/add-user.sh -s -u $JBOSS_USER -p $JBOSS_PASSWORD
+fi
+
+echo "Criando o script $JBOSS_INIT ..."
+sudo cp $JBOSS_DIR/bin/init.d/jboss-as-domain.sh $JBOSS_INIT
+
+echo "Gerando o arquivo ($JBOSS_AS_CONF) os seguintes parâmetros de inicialização:"
+sudo install -d `dirname $JBOSS_AS_CONF`
+cat $JBOSS_AS_CONF_START | sudo tee $JBOSS_AS_CONF > /dev/null
+cat <<EOF | sudo tee -a $JBOSS_AS_CONF > /dev/null
+JBOSS_HOME=$JBOSS_HOME
+JBOSS_USER=$JBOSS_USER
+JBOSS_CONSOLE_LOG=$JBOSS_CONSOLE_LOG
+EOF
+echo "JBOSS_HOST_CONFIG=host-$JBOSS_TYPE.xml" | sudo tee -a $JBOSS_AS_CONF > /dev/null
+sudo chmod 644 $JBOSS_AS_CONF
+sed 's/^/  /' $JBOSS_AS_CONF
+
+echo "Aplicando patches para configurar um JBoss do tipo $JBOSS_TYPE ..."
+PATCH_SUFIX=".$JBOSS_TYPE.patch"
+for f in $(cd $BASE_DIR && find $JBOSS_DIR -name \*$PATCH_SUFIX)
+do
+  echo "  Salvando ${f%$PATCH_SUFIX} adicionando a extensão .original ..."
+  sudo -u $JBOSS_USER cp ${f%$PATCH_SUFIX} ${f%$PATCH_SUFIX}.original
+  echo "  Aplicando o patch $f nesse arquivo ..."
+  sudo -u $JBOSS_USER patch ${f%$PATCH_SUFIX} < $BASE_DIR/$f > /dev/null
+done
+
+f=$JBOSS_DIR/bin/domain.conf
+if [ $JBOSS_TYPE = master ]
+then
+  echo "Ajustando JBOSS_BIND_ADDRESS_MANAGEMENT em $f ..."
+  sudo -u $JBOSS_USER sed -i "s/JBOSS_BIND_ADDRESS_MANAGEMENT/$JBOSS_BIND_ADDRESS_MANAGEMENT/g" $f
+  echo "Valor ajustado:"
+  grep 'jboss.bind.address.management=' $f
+fi
+
+echo "Ajustando JBOSS_BIND_ADDRESS em $f ..."
+sudo -u $JBOSS_USER sed -i "s/JBOSS_BIND_ADDRESS/$JBOSS_BIND_ADDRESS/g" $f
+echo "Valor ajustado:"
+grep 'jboss.bind.address=' $f
+
+if [ $JBOSS_TYPE = slave ]
+then
+  f=$JBOSS_DIR/domain/configuration/host-slave.xml
+  echo "Ajustando JBOSS_PASSWORD_BASE64, JBOSS_USER, JBOSS_MASTER_PRIMARY_IP e JBOSS_MASTER_BACKUP_IP em $f ..."
+  sudo -u $JBOSS_USER \
+  sed -i "
+    s/JBOSS_PASSWORD_BASE64/`echo -n $JBOSS_PASSWORD|base64`/g
+    s/JBOSS_USER/$JBOSS_USER/g
+    s/JBOSS_MASTER_PRIMARY_IP/$JBOSS_MASTER_PRIMARY_IP/g
+    s/JBOSS_MASTER_BACKUP_IP/$JBOSS_MASTER_BACKUP_IP/g
+  " $f
+
+  echo "Configurações realizadas p/ conexão aos DCs:"
+  sed -n '57,64p' $f
+fi
+
+echo "Ajustando a inicialização automática do JBoss ..."
+sudo chkconfig jboss-as on

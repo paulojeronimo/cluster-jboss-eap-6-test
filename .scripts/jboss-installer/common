@@ -1,0 +1,11 @@
+#!/bin/bash
+set +x
+set -e
+
+CONFIG="$BASE_DIR"/config
+[ -f "$CONFIG" ] || CONFIG=$CONFIG.sample
+source "$CONFIG" || exit $?
+
+JBOSS_CONF=$BASE_DIR/jboss.conf
+[ -f "$JBOSS_CONF" ] || JBOSS_CONF=$JBOSS_CONF.sample
+source "$JBOSS_CONF" || exit $?

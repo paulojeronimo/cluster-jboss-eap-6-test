@@ -1,0 +1,15 @@
+#!/bin/bash
+set +x
+set -e
+
+export BASE_DIR=`cd "$(dirname "$0")"; pwd`
+source "$BASE_DIR"/common
+
+cd $JBOSS_PARENT_HOME
+
+echo "Matando processos do usuário $JBOSS_USER ..."
+sudo pkill -u $JBOSS_USER 2> /dev/null || true
+sleep 2
+
+echo "Removendo arquivos de instalações anteriores ..."
+sudo rm -rf `dirname $JBOSS_AS_CONF` $JBOSS_INIT $JBOSS_DIR

@@ -4,17 +4,5 @@ set -e
 
 BASE_DIR=${BASE_DIR:-/vagrant}
 SCRIPTS_DIR=${SCRIPTS_DIR:-$BASE_DIR/.scripts}
-HOST=`hostname -s`
-BACKUP_DIR=${BACKUP_DIR:-$BASE_DIR/.backup}; mkdir -p $BACKUP_DIR
 
-source "$BASE_DIR"/$HOST/jboss.conf
-source "$SCRIPTS_DIR"/jboss.conf
-
-cd $JBOSS_PARENT_HOME
-
-echo "Matando processos do usuário $JBOSS_USER ..."
-sudo pkill -u $JBOSS_USER 2> /dev/null || true
-sleep 2
-
-echo "Removendo arquivos de instalações anteriores ..."
-sudo rm -rf `dirname $JBOSS_CONF` $JBOSS_INIT $JBOSS_DIR
+$SCRIPTS_DIR/jboss-installer/jboss-remove

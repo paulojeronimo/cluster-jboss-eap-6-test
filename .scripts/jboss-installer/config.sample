@@ -1,0 +1,48 @@
+#!/bin/bash
+
+JBOSS_AS_CONF=/etc/init.d/jboss-as.conf
+JBOSS_AS_CONF_START=$BASE_DIR/`basename $JBOSS_AS_CONF`
+HOST=`hostname -s`
+
+[ -f "$JBOSS_AS_CONF_START" ] || JBOSS_AS_CONF_START=$JBOSS_AS_CONF_START.sample
+source "$JBOSS_AS_CONF_START" || exit $?
+
+case "$JBOSS_ENVIRONMENT" in
+  desenvolvimento)
+    JBOSS_MASTER_PRIMARY_IP=172.17.6.81
+    JBOSS_MASTER_BACKUP_IP=172.17.6.82
+  ;;
+  homologacao)
+    JBOSS_MASTER_PRIMARY_IP=172.17.6.81
+    JBOSS_MASTER_BACKUP_IP=172.17.6.82
+  ;;
+  producao)
+    JBOSS_MASTER_PRIMARY_IP=172.17.6.81
+    JBOSS_MASTER_BACKUP_IP=172.17.6.82
+  ;;
+esac
+
+case "$HOST" in
+  master1)
+    JBOSS_TYPE=master
+    JBOSS_MASTER_TYPE=primary
+    JBOSS_BIND_ADDRESS=$JBOSS_MASTER_PRIMARY_IP
+  ;;
+  master2)
+    JBOSS_TYPE=backup
+    JBOSS_MASTER_TYPE=backup
+    JBOSS_BIND_ADDRESS=$JBOSS_MASTER_BACKUP_IP
+  ;;
+  *)
+    JBOSS_TYPE=slave
+    case $OSTYPE in
+      linux*)
+        JBOSS_BIND_ADDRESS=`hostname -I|cut -d' ' -f2`
+      ;;
+      darwin*)
+        JBOSS_BIND_ADDRESS=localhost
+      ;;
+    esac
+esac
+
+JBOSS_BIND_ADDRESS_MANAGEMENT=${JBOSS_BIND_ADDRESS_MANAGEMENT:-$JBOSS_BIND_ADDRESS}

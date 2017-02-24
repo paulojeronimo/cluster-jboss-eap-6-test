@@ -4,20 +4,5 @@ set -e
 
 BASE_DIR=${BASE_DIR:-/vagrant}
 SCRIPTS_DIR=${SCRIPTS_DIR:-$BASE_DIR/.scripts}
-HOST=`hostname -s`
-BACKUP_DIR=${BACKUP_DIR:-$BASE_DIR/.backup}; mkdir -p $BACKUP_DIR
 
-source "$BASE_DIR"/$HOST/jboss.conf
-source "$SCRIPTS_DIR"/jboss.conf
-
-if grep -q $JBOSS_USER /etc/passwd
-then
-  echo "Removendo o usuário $JBOSS_USER ..."
-  sudo userdel -rf $JBOSS_USER || true
-fi
-
-if grep -q $JBOSS_GROUP /etc/group
-then
-  echo "Removendo o grupo $JBOSS_USER ..."
-  sudo groupdel $JBOSS_GROUP || true
-fi
+$SCRIPTS_DIR/jboss-installer/userdel

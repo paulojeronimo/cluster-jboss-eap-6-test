@@ -1,0 +1,18 @@
+#!/bin/bash
+set +x
+set -e
+
+export BASE_DIR=`cd "$(dirname "$0")"; pwd`
+source "$BASE_DIR"/common
+
+if grep -q $JBOSS_USER /etc/passwd
+then
+  echo "Removendo o usuário $JBOSS_USER ..."
+  sudo userdel -rf $JBOSS_USER || true
+fi
+
+if grep -q $JBOSS_GROUP /etc/group
+then
+  echo "Removendo o grupo $JBOSS_USER ..."
+  sudo groupdel $JBOSS_GROUP || true
+fi

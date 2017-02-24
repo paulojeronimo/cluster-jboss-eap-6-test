@@ -1,0 +1,18 @@
+#!/bin/bash
+set +x
+set -e
+
+export BASE_DIR=`cd "$(dirname "$0")"; pwd`
+source "$BASE_DIR"/common
+
+if ! grep -q $JBOSS_GROUP /etc/group
+then
+   echo "Criando o grupo $JBOSS_GROUP ..."
+   sudo groupadd $JBOSS_GROUP
+fi
+
+if ! grep -q $JBOSS_USER /etc/passwd
+then
+   echo "Criando o usuário $JBOSS_USER ..."
+   sudo useradd $JBOSS_USER -g $JBOSS_GROUP -K UMASK=007
+fi
