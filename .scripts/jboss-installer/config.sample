@@ -29,7 +29,7 @@ case "$HOST" in
     JBOSS_BIND_ADDRESS=$JBOSS_MASTER_PRIMARY_IP
   ;;
   master2)
-    JBOSS_TYPE=backup
+    JBOSS_TYPE=master
     JBOSS_MASTER_TYPE=backup
     JBOSS_BIND_ADDRESS=$JBOSS_MASTER_BACKUP_IP
   ;;
